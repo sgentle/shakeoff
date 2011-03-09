@@ -1,0 +1,222 @@
+<html>
+	<head>
+		<style type="text/css">
+		</style>
+
+		<script src="/socket.io/socket.io.js"></script> 
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.5.1/jquery.min.js"></script> 
+		<script> 
+			var socket = new io.Socket(null,{port: 9876}); 
+			var serverAway = false;
+      inGame = false;
+			socket.on('connect', function(){
+        //console.log('connected');
+			});
+      socket.on('disconnect', function() {
+        serverAway = true;
+        updateHistory();
+      });
+      var goodMessages = [
+        "Nice synergy!",
+        "Out-of-the-box thinking!",
+        "Feeling empowered!",
+        "Win-win!",
+        "Game changing!",
+        "Put out fires!",
+        "Knocked it out of the park!",
+        "Holistic!",
+        "Cross-functional!",
+        "Perfect storm!",
+        "Good team playing!",
+        "Raised the bar!",
+        "Got buy-in!",
+        "Liaised with stakeholders!",
+        "Pushed the envelope!",
+        "Hit the ground running!",
+        "Thinking big picture!",
+        "Shifted paradigms!",
+        "Good leverage!",
+        "Ran it up the flagpole!",
+        "Proactive!",
+        "Got your ducks in a row!",
+        "Innoventive!",
+        "Managed expectations!",
+        "Nice value proposition!"
+      ]
+      var goodMessage = function() {
+        return goodMessages[Math.floor(Math.random()*goodMessages.length)];
+      }
+      var badMessages = [
+        "Dropped the ball!",
+        "Couldn't come to the table!",
+        "Missed expectations!",
+        "Fell through the cracks!",
+        "Non-starter!",
+        "Management doesn't love it!",
+        "Perfect storm!",
+        "Take a step back!",
+        "Thrown under the bus!",
+        "Gotta drink the Kool-Aid!",
+        "Bad ROI!",
+        "Not sustainable!"        
+      ]
+      var badMessage = function() {
+        return badMessages[Math.floor(Math.random()*badMessages.length)];
+      }
+
+
+      socket.on('message', function(msg) {
+        data = JSON.parse(msg);
+        //console.log(data);
+        switch(data[0]) {
+          case "pos":
+            theirPos = data[1];
+            break;
+          case "name":
+            theirName = data[1];
+            break;
+          case "nemesis":
+            theirName = data[1];
+            theirPos = 0;
+            myPos = 0;
+            startCountdown();
+            inGame = true;
+            break;
+          case "gameOver":
+            if (inGame) {
+              if (data[1] >= 0) {
+                $('#points').text(goodMessage() + " Scored " + data[1] + " points (total: " + data[2] + ")");
+              }
+              else {
+                $('#points').text(badMessage() + " Lost " + -1*data[1] + " points (total: " + data[2] + ")");
+              }
+              inGame = false;
+              stopCountdown();
+              theirPos = 0;
+              myPos = 0;
+            }
+            break;
+          case "highScores":
+            var html = "High Scores: <ol>" + data[1].map(function(x){ return "<li>" + x.name + ": " + x.score + "</li>";}).join("")+"</ol>";
+            $('#highscores').html(html);
+            break;
+          case "waiting":
+            inGame = false;
+            theirName = "waiting_for_opponent...";
+            break;
+        }
+        updateHistory();
+      });
+      socket.connect();
+      
+      var myPos = 0;
+      var myName = 'anonymous';
+      var replaceName = true;
+      var theirPos = 0;
+      var theirName = '';
+      var playArea = 25;
+      
+      
+      var rightKey=39;
+      var leftKey=37;
+      var backSpace=8;
+      
+      $(document).keydown(function(ev) {
+        switch(ev.keyCode) {
+          case rightKey:
+            myPos++;
+            myPos < playArea-2 || (myPos = playArea-2);
+            updateServer();
+            ev.preventDefault();
+            break;
+          case leftKey:
+            myPos--;
+            myPos > 0 || (myPos = 0);
+            updateServer();
+            ev.preventDefault();
+            break;
+          case backSpace:
+            myName = myName.slice(0,-1);
+            socket.send(JSON.stringify(['name',myName]));
+            ev.preventDefault();
+            break;
+          default:
+            var chr = String.fromCharCode(ev.keyCode);
+            var unmodified = !ev.metaKey && !ev.ctrlKey && !ev.altKey;
+            if (unmodified && chr.match(/\w/)) {
+              if (replaceName) {
+                replaceName = false;
+                myName = "";
+              }
+
+              ev.shiftKey || (chr = chr.toLowerCase());
+              myName = myName + chr;
+            }
+            socket.send(JSON.stringify(['name',myName]));
+        }
+        updateHistory();
+      });
+
+      strmul = function(str, num) {
+        return num ? Array(num + 1).join(str) : "";
+      };
+
+      updateHistory = function() {
+        if (serverAway) {
+          text = "server_went_away_hit_refresh_to_try_again";
+        }
+        else {
+          var mySpace = strmul('_',myPos);
+          var middleSpace = strmul('_', playArea - 2 - myPos - theirPos);
+          var theirSpace = strmul('_', theirPos);
+        
+          text = myName + '|' + mySpace + '>' + middleSpace + '<' + theirSpace + '|' + theirName;
+        }
+        window.history.replaceState ? window.history.replaceState({},"",text) : window.location = '#'+text;
+      };
+
+      updateServer = function() {
+        socket.send(JSON.stringify(['pos',myPos]));
+      };
+      
+      var countdownTimer = null;
+      startCountdown = function() {
+        stopCountdown();
+        var countdown = 10;
+        $('#countdown').text(countdown);
+        countdownTimer = window.setInterval(function() {
+          countdown--;
+          $('#countdown').text(countdown);
+          if (countdown === 0) {
+            stopCountdown();
+          }
+        },1000);
+      };
+      stopCountdown = function() {
+        window.clearInterval(countdownTimer);
+      };
+      
+		</script>
+
+    <style>
+      #countdown {
+        font-size: 2em;
+      }
+    </style>
+	</head>
+	<body>
+    <h1>Shake-off!</h1>
+    <p>
+      Test your negotiating skills in this realistic business simulator. You want your hand (&gt;) to shake the other guy's hand (&lt;) as close to your end as possible. The closer you are, the more points you get!
+    </p>
+    <p>
+      Controls: arrow keys to move, type and backspace to change your name
+    </p>
+    <div id="countdown">
+    </div>
+    <div id="points">
+    </div>
+    <div id="highscores">
+    </div>
+	</body>
+</html>
