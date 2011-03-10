@@ -107,7 +107,6 @@
         }
         updateHistory();
       });
-      socket.connect();
       
       var myPos = 0;
       var myName = 'anonymous';
@@ -117,12 +116,20 @@
       var playArea = 25;
       
       
-      var rightKey=39;
-      var leftKey=37;
-      var backSpace=8;
+      var rightKey = 39;
+      var leftKey = 37;
+      var backSpace = 8;
+      var enter = 13;
       
+      var started = false;
       $(document).keydown(function(ev) {
         switch(ev.keyCode) {
+          case enter:
+            if (!started) {
+              started = true;
+              socket.connect();
+            }
+            break;
           case rightKey:
             myPos++;
             myPos < playArea-2 || (myPos = playArea-2);
@@ -136,8 +143,14 @@
             ev.preventDefault();
             break;
           case backSpace:
-            myName = myName.slice(0,-1);
-            socket.send(JSON.stringify(['name',myName]));
+            if (replaceName) {
+              replaceName = false;
+              myName = "";
+            }
+            else {
+              myName = myName.slice(0,-1);
+              socket.send(JSON.stringify(['name',myName]));
+            }
             ev.preventDefault();
             break;
           default:
@@ -162,16 +175,16 @@
       };
 
       updateHistory = function() {
-        if (serverAway) {
-          text = "server_went_away_hit_refresh_to_try_again";
-        }
-        else {
-          var mySpace = strmul('_',myPos);
-          var middleSpace = strmul('_', playArea - 2 - myPos - theirPos);
-          var theirSpace = strmul('_', theirPos);
-        
-          text = myName + '|' + mySpace + '>' + middleSpace + '<' + theirSpace + '|' + theirName;
-        }
+        var message = null;
+        started || (message = "press_enter_to_start");
+        serverAway && (message = "server_went_away_hit_refresh_to_try_again");
+
+        var mySpace = strmul('_',myPos);
+        var middleSpace = strmul('_', playArea - 2 - myPos - theirPos);
+        var theirSpace = strmul('_', theirPos);
+      
+        text = myName + '|' + mySpace + '>' + middleSpace + '<' + theirSpace + '|' + (message || theirName);
+
         window.history.replaceState ? window.history.replaceState({},"",text) : window.location = '#'+text;
       };
 
@@ -196,6 +209,8 @@
         window.clearInterval(countdownTimer);
       };
       
+      updateHistory();
+      
 		</script>
 
     <style>
@@ -207,10 +222,11 @@
 	<body>
     <h1>Shake-off!</h1>
     <p>
-      Test your negotiating skills in this realistic business simulator. You want your hand (&gt;) to shake the other guy's hand (&lt;) as close to your end as possible. The closer you are, the more points you get!
+      Test your negotiating skills in this realistic business simulator. You need your hand (&gt;) to shake your negotiating partner's hand (&lt;) to close the deal. The closer you are to your end, the more points you get! Be quick, though, because there's a 10 second time-limit before Google buys all your competitors and ruins the deal, harshing your mellow and costing you valuable points.
     </p>
     <p>
-      Controls: arrow keys to move, type and backspace to change your name
+      Controls: arrow keys to move, type and backspace to change your name<br />
+      Press enter when ready.
     </p>
     <div id="countdown">
     </div>
