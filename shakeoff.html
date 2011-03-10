@@ -102,6 +102,7 @@
             break;
           case "waiting":
             inGame = false;
+            stopCountdown();
             theirName = "waiting_for_opponent...";
             break;
         }
@@ -206,6 +207,7 @@
         },1000);
       };
       stopCountdown = function() {
+        $('#countdown').text(0);        
         window.clearInterval(countdownTimer);
       };
       

@@ -70,14 +70,13 @@ socket.on('connection', function(client){
       highScores.push(highScore);
     }
     highScores.sort(function(a, b) { return b.score - a.score; });
-  
-    client.send(JSON.stringify(['highScores',highScores.map(function(x) { return {score: x.score, name: x.client.username}; })]));
   }
   
   client.on('nemesis', function(newNemesis) {
     nemesis = newNemesis;
     
     pos = 0;
+    client.emit('getHighScore');
     client.send(JSON.stringify(['nemesis', nemesis.username]));
   });
   
@@ -116,6 +115,10 @@ socket.on('connection', function(client){
         nemesis && nemesis.emit('name', name);
         break;
     }
+  });
+
+  client.on('getHighScore', function(name) {
+    client.send(JSON.stringify(['highScores',highScores.map(function(x) { return {score: x.score, name: x.client.username}; })]));
   });
 
   client.on('name', function(name) {
