@@ -66,7 +66,7 @@
 
       socket.on('message', function(msg) {
         data = JSON.parse(msg);
-        //console.log(data);
+        console.log(data);
         switch(data[0]) {
           case "pos":
             theirPos = data[1];
@@ -96,7 +96,7 @@
             }
             break;
           case "highScores":
-            var html = "High Scores: <ol>" + data[1].map(function(x){ return "<li>" + x.name + ": " + x.score + "</li>";}).join("")+"</ol>";
+            var html = "High Scores: <ol>" + data[1].map(function(x){ return "<li>" + escape(x.name) + ": " + x.score + "</li>";}).join("")+"</ol>";
             $('#highscores').html(html);
             break;
           case "waiting":
