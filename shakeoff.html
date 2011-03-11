@@ -227,6 +227,10 @@
         -o-transform: translateY(250%) rotateZ(45deg);
         transform: translateY(250%) rotateZ(45deg);
       }
+      #lookhere {
+        position: absolute;
+        top: 0; margin: 0px auto;
+      }
       body {
         max-width: 960px;
         margin: 96px auto;
@@ -234,12 +238,32 @@
     </style>
 	</head>
 	<body>
+    <div id="lookhere">
+      Look up here! &uarr;
+    </div>
+
     <h1>Shakeoff!</h1>
     <p>
-      Test your negotiating skills in this realistic business simulator. You need your hand (&gt;) to shake your negotiating partner's hand (&lt;) to close the deal. The closer you are to your end, the more points you get! Be quick, though, because there's a 10 second time-limit before Google buys all your competitors and ruins the deal, harshing your mellow and costing you valuable points.
+      Test your negotiating skills in this realistic business simulator.
     </p>
     <p>
-      Controls: arrow keys to move, type and backspace to change your name<br />
+      Rules:
+      <ul>
+        <li>You need your hand (&gt;) to shake your negotiating partner's hand (&lt;) to close the deal.</li>
+        <li>You get more points the closer you are to your end when the deal is closed</li>
+        <ul>
+          <li>Specifically, it's (distance from other side)<sup>2</sup></li>
+        </ul>
+        <li>However, there is a 10-second time limit. If you don't make the deal in that much time, you lose points!</li>
+        <ul>
+          <li>Specifically, -(distance from other side)<sup>2</sup></li>
+        </ul>
+      </ul>
+    </p>
+    <p>
+      Controls: arrow keys to move, type and backspace to change your name
+    </p>
+    <p>
       Press enter when ready.
     </p>
     <div id="countdown">

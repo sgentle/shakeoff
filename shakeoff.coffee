@@ -60,12 +60,7 @@ class Player
     #sys.log "started countdown by #{@name}"
     @countdownTimer = setTimeout(=> 
       @stopCountdown()
-      nem = @nemesis
-      nem?.gameOver -100
-      @gameOver -100
-
-      @newGame()
-      nem?.newGame()    
+      @loseGame()
     ,10*1000)
 
   stopCountdown: ->
@@ -92,6 +87,26 @@ class Player
     else 
       freeUser = this
       @sendCmd 'waiting'
+      
+      
+  winGame: -> @endGame(true)
+  loseGame: -> @endGame(false)
+  
+  endGame: (win = true) ->
+    nem = @nemesis
+    
+    myBasis = playArea-@pos
+    nemBasis = playArea-nem.pos
+    if win
+      nem.gameOver nemBasis*nemBasis
+      @gameOver myBasis*myBasis
+    else
+      nem.gameOver -nemBasis*nemBasis
+      @gameOver -myBasis*myBasis
+      
+    @newGame()
+    nem.newGame()
+    
 
   gameOver: (points) ->
     @stopCountdown() if @countdownTimer?
@@ -132,13 +147,7 @@ class Player
   cmds:
     pos: (@pos) ->
       if (@nemesis? and @nemesis.pos + @pos >= playArea - 2) 
-        nem = @nemesis
-        
-        nem.gameOver (playArea-nem.pos)*(playArea-nem.pos)
-        @gameOver (playArea-@pos)*(playArea-@pos)
-        
-        @newGame()
-        nem.newGame()
+        @winGame()
       else 
         @nemesis?.sendCmd 'pos', @pos
 
